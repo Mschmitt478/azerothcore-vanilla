@@ -1,0 +1,16 @@
+aws_region     = "us-east-1"
+aws_profile    = "your-aws-profile"
+name_prefix    = "warwid-azerothcore"
+ssh_key_name   = "your-existing-ec2-keypair"
+admin_cidrs    = ["203.0.113.10/32"]
+realm_address  = "play.warwid.com"
+realm_name     = "Warwid"
+instance_type  = "t3.large"
+image_tag      = "master"
+
+# Leave null to use the default VPC/subnet.
+vpc_id    = null
+subnet_id = null
+
+# Leave null to generate this on the EC2 host.
+db_root_password = null

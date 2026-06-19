@@ -222,11 +222,21 @@ FROM skeleton AS client-data
 
 LABEL description="AzerothCore client-data"
 
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+ARG DOCKER_USER=acore
+
 ENV DATAPATH=/azerothcore/env/dist/data
 
 RUN apt-get update && \
-    apt-get install -y curl unzip && \
+    apt-get install -y curl unzip adduser && \
     rm -rf /var/lib/apt/lists/*
+
+RUN userdel --remove ubuntu \
+  && addgroup --gid "$GROUP_ID" "$DOCKER_USER" \
+  && adduser --disabled-password --gecos '' --uid "$USER_ID" --gid "$GROUP_ID" "$DOCKER_USER" \
+  && passwd -d "$DOCKER_USER" \
+  && chown -R "$DOCKER_USER:$DOCKER_USER" /azerothcore
 
 COPY --chown=$DOCKER_USER:$DOCKER_USER apps apps
 
