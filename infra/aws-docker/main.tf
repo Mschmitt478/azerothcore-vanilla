@@ -191,6 +191,10 @@ resource "aws_ebs_volume" "azerothcore_data" {
   type              = var.data_volume_type
   encrypted         = true
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = {
     Name   = "${var.name_prefix}-data"
     Backup = var.enable_ebs_snapshots ? "daily" : "disabled"
