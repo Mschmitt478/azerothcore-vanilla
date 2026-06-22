@@ -142,6 +142,10 @@ COPY --chown=$USER_ID:$GROUP_ID \
      --chmod=755 \
      apps/docker/entrypoint.sh /azerothcore/entrypoint.sh
 
+COPY --chown=$USER_ID:$GROUP_ID \
+     --chmod=755 \
+     apps/docker/apply-warwid-small-group-config.sh /azerothcore/apply-warwid-small-group-config.sh
+
 USER $DOCKER_USER
 
 ENTRYPOINT ["/usr/bin/env", "bash", "/azerothcore/entrypoint.sh"]
@@ -181,6 +185,7 @@ ENV AC_UPDATES_ENABLE_DATABASES=0
 # This disables user prompts. The console is still active, however
 ENV AC_DISABLE_INTERACTIVE=1
 ENV AC_CLOSE_IDLE_CONNECTIONS=0
+ENV AC_CONFIG_PROFILE=warwid-small-group
 
 COPY --chown=$DOCKER_USER:$DOCKER_USER \
      --from=build \

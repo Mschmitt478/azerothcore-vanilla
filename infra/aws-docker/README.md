@@ -35,6 +35,7 @@ From WSL or Linux:
 
 ```bash
 cd /home/matt/source/repos/azerothcore-wotlk-master
+git submodule update --init --recursive
 infra/aws-docker/scripts/build-and-push-images.sh -r us-east-1 -t master
 ```
 
@@ -122,6 +123,68 @@ account set gmlevel <username> 3 -1
 
 Detach with `Ctrl-p` then `Ctrl-q`. Do not use `Ctrl-c`; it stops the worldserver.
 
+## Small-Group Module Stack
+
+The runtime images include pinned Git submodules for:
+
+- Individual Progression
+- AutoBalance
+- AHBot
+- AoE Loot
+- Solo LFG
+
+The worldserver image applies the `warwid-small-group` profile at startup. The
+profile updates the persistent configuration under `/srv/azerothcore/etc`
+without replacing database connection settings or unrelated administrator
+changes.
+
+The initial profile enables:
+
+- AutoBalance for one through six players, including raid scaling.
+- Individual Progression with Vanilla/TBC power corrections and selected
+  small-group raid mechanics.
+- AoE Loot with a 30-yard radius.
+- Solo LFG with a reduced dungeon XP multiplier.
+- Cross-faction groups, guilds, chat, channels, calendar, and auction house.
+- 1.5x kill/quest XP and reputation with 1x equipment drops.
+
+AHBot is installed and configured, but it remains disabled until it has a
+dedicated account or character. After creating the AHBot account and character,
+add their numeric IDs to the `ac-worldserver` environment in
+`/srv/azerothcore/runtime/docker-compose.yml`:
+
+```yaml
+environment:
+  AC_AHBOT_ACCOUNT_ID: "<account id>"
+  AC_AHBOT_CHARACTER_GUID: "<character guid>"
+```
+
+Then recreate the worldserver:
+
+```bash
+cd /srv/azerothcore/runtime
+sudo docker compose up -d --force-recreate ac-worldserver
+```
+
+The startup profile enables both the AHBot seller and buyer only when at least
+one of these IDs is nonzero.
+
+## Deploy a Module Upgrade
+
+Build and push the new images, then update the existing Docker host without
+replacing its persistent EBS volume:
+
+```bash
+cd /srv/azerothcore/runtime
+sudo docker compose pull
+sudo docker compose run --rm ac-db-import
+sudo docker compose up -d --force-recreate ac-authserver ac-worldserver
+sudo docker compose logs --tail=200 ac-worldserver
+```
+
+Running `ac-db-import` before recreating the worldserver applies module database
+updates from the new image.
+
 ## Useful Maintenance
 
 ```bash
@@ -138,6 +201,7 @@ sudo cat /srv/azerothcore/secrets/db-root-password
 
 - Leave `db_root_password = null` unless you are comfortable storing that password in Terraform state. The default generates it on the EC2 host.
 - MySQL is bound to `127.0.0.1` on the instance. Use SSH tunneling for direct DB maintenance.
-- `mod-individual-progression` must be present in the local `modules/` folder before building and pushing ECR images.
+- Initialize the pinned module set with `git submodule update --init --recursive`
+  before building and pushing ECR images.
 - If your module has SQL files, put them under the matching `data/sql/custom/...` path before building the `db-import` image.
 - EC2 pulls ECR tags based on `image_tag`; with the default `master`, it expects `master-authserver`, `master-worldserver`, `master-db-import`, and `master-client-data`.

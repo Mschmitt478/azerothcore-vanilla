@@ -9,6 +9,8 @@
 /.env*
 .idea
 !.gitkeep
+/modules/*/.git
+/modules/mod-individual-progression/optional
 
 # do not ignore the ccache folder (used by the ci)
 !/var/docker/ccache

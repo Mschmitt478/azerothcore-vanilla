@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: build-and-push-images.sh [-r AWS_REGION] [-t IMAGE_TAG] [-m MODULE_PATH]
+Usage: build-and-push-images.sh [-r AWS_REGION] [-t IMAGE_TAG]
 
 Builds and pushes the four ECR images expected by infra/aws-docker:
   <tag>-authserver
@@ -25,13 +25,10 @@ TF_DIR="${TF_DIR:-$(cd -- "$SCRIPT_DIR/.." && pwd)}"
 REPO_ROOT="${REPO_ROOT:-$(cd -- "$TF_DIR/../.." && pwd)}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 IMAGE_TAG="${IMAGE_TAG:-master}"
-MODULE_PATH="${MODULE_PATH:-$REPO_ROOT/modules/mod-individual-progression}"
-
-while getopts ":r:t:m:h" opt; do
+while getopts ":r:t:h" opt; do
   case "$opt" in
     r) AWS_REGION="$OPTARG" ;;
     t) IMAGE_TAG="$OPTARG" ;;
-    m) MODULE_PATH="$OPTARG" ;;
     h) usage; exit 0 ;;
     *) usage >&2; exit 2 ;;
   esac
@@ -41,18 +38,28 @@ command -v aws >/dev/null || { echo "aws CLI is required" >&2; exit 1; }
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 1; }
 command -v terraform >/dev/null || { echo "terraform is required" >&2; exit 1; }
 
-if [ ! -d "$MODULE_PATH" ]; then
-  echo "Required module is missing: $MODULE_PATH" >&2
-  echo "Clone mod-individual-progression into modules/ before building images." >&2
-  exit 1
-fi
-
 if [ ! -d "$REPO_ROOT/.git" ]; then
   echo "REPO_ROOT must point at the AzerothCore Git checkout: $REPO_ROOT" >&2
   exit 1
 fi
 
 cd "$REPO_ROOT"
+
+required_modules=(
+  mod-individual-progression
+  mod-autobalance
+  mod-ah-bot
+  mod-aoe-loot
+  mod-solo-lfg
+)
+
+for module in "${required_modules[@]}"; do
+  if [ ! -d "$REPO_ROOT/modules/$module" ]; then
+    echo "Required module is missing: $REPO_ROOT/modules/$module" >&2
+    echo "Run: git submodule update --init --recursive" >&2
+    exit 1
+  fi
+done
 
 repo_uri="$(terraform -chdir="$TF_DIR" output -raw ecr_repository_url)"
 registry="${repo_uri%%/*}"

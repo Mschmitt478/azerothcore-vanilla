@@ -49,6 +49,10 @@ else
     touch "$CONF"
 fi
 
+if [[ "$ACORE_COMPONENT" == "worldserver" && "${AC_CONFIG_PROFILE:-}" == "warwid-small-group" ]]; then
+    /azerothcore/apply-warwid-small-group-config.sh
+fi
+
 echo "Starting $ACORE_COMPONENT..."
 
 exec "$@"

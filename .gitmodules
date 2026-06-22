@@ -1,3 +1,19 @@
 [submodule "modules/mod-playerbots"]
 	path = modules/mod-playerbots
-	url = https://github.com/liyunfan1223/mod-playerbots.git
+	url = https://github.com/mod-playerbots/mod-playerbots.git
+	branch = master
+[submodule "modules/mod-individual-progression"]
+	path = modules/mod-individual-progression
+	url = https://github.com/ZhengPeiRu21/mod-individual-progression.git
+[submodule "modules/mod-autobalance"]
+	path = modules/mod-autobalance
+	url = https://github.com/azerothcore/mod-autobalance.git
+[submodule "modules/mod-ah-bot"]
+	path = modules/mod-ah-bot
+	url = https://github.com/azerothcore/mod-ah-bot.git
+[submodule "modules/mod-aoe-loot"]
+	path = modules/mod-aoe-loot
+	url = https://github.com/azerothcore/mod-aoe-loot.git
+[submodule "modules/mod-solo-lfg"]
+	path = modules/mod-solo-lfg
+	url = https://github.com/azerothcore/mod-solo-lfg.git
