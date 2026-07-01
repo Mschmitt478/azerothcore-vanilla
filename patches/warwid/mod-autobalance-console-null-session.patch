@@ -1,0 +1,93 @@
+diff --git a/src/ABCommandScript.cpp b/src/ABCommandScript.cpp
+index 14b9356..c3b0eb0 100644
+--- a/src/ABCommandScript.cpp
++++ b/src/ABCommandScript.cpp
+@@ -4,14 +4,31 @@
+ #include "ABCreatureInfo.h"
+ #include "ABMapInfo.h"
+ #include "ABUtils.h"
++#include "Common.h"
+ #include "Message.h"
++#include "WorldSession.h"
++
++namespace
++{
++LocaleConstant GetCommandLocale(ChatHandler* handler)
++{
++    if (WorldSession* session = handler->GetSession())
++    {
++        return session->GetSessionDbLocaleIndex();
++    }
++
++    return DEFAULT_LOCALE;
++}
++}
+ 
+ bool AutoBalance_CommandScript::HandleABSetOffsetCommand(ChatHandler* handler, const char* args)
+ {
++    LocaleConstant locale = GetCommandLocale(handler);
++
+     if (!*args)
+     {
+         handler->PSendSysMessage(".autobalance setoffset #");
+-        handler->PSendSysMessage(ABGetLocaleText(handler->GetSession()->GetSessionDbLocaleIndex(), "set_offset_command_description").c_str());
++        handler->PSendSysMessage(ABGetLocaleText(locale, "set_offset_command_description").c_str());
+         return false;
+     }
+     char* offset = strtok((char*)args, " ");
+@@ -21,26 +38,32 @@ bool AutoBalance_CommandScript::HandleABSetOffsetCommand(ChatHandler* handler, c
+     {
+         offseti = (uint32)atoi(offset);
+         std::vector<std::string> args = { std::to_string(offseti) };
+-        handler->PSendSysMessage(ABGetLocaleText(handler->GetSession()->GetSessionDbLocaleIndex(), "set_offset_command_success").c_str(), offseti);
++        handler->PSendSysMessage(ABGetLocaleText(locale, "set_offset_command_success").c_str(), offseti);
+         PlayerCountDifficultyOffset = offseti;
+         globalConfigTime = GetCurrentConfigTime();
+         return true;
+     }
+     else
+-        handler->PSendSysMessage(ABGetLocaleText(handler->GetSession()->GetSessionDbLocaleIndex(), "set_offset_command_error").c_str());
++        handler->PSendSysMessage(ABGetLocaleText(locale, "set_offset_command_error").c_str());
+     return false;
+ }
+ 
+ bool AutoBalance_CommandScript::HandleABGetOffsetCommand(ChatHandler* handler, const char* /*args*/)
+ {
+-    handler->PSendSysMessage(ABGetLocaleText(handler->GetSession()->GetSessionDbLocaleIndex(), "get_offset_command_success").c_str(), PlayerCountDifficultyOffset);
++    handler->PSendSysMessage(ABGetLocaleText(GetCommandLocale(handler), "get_offset_command_success").c_str(), PlayerCountDifficultyOffset);
+     return true;
+ }
+ 
+ bool AutoBalance_CommandScript::HandleABMapStatsCommand(ChatHandler* handler, const char* /*args*/)
+ {
+     Player* player = handler->GetPlayer();
+-    auto locale = handler->GetSession()->GetSessionDbLocaleIndex();
++    auto locale = GetCommandLocale(handler);
++
++    if (!player)
++    {
++        handler->PSendSysMessage(ABGetLocaleText(locale, "ab_command_only_in_instance").c_str());
++        return false;
++    }
+ 
+     AutoBalanceMapInfo* mapABInfo = GetMapInfo(player->GetMap());
+ 
+@@ -127,9 +150,17 @@ bool AutoBalance_CommandScript::HandleABMapStatsCommand(ChatHandler* handler, co
+ 
+ bool AutoBalance_CommandScript::HandleABCreatureStatsCommand(ChatHandler* handler, const char* /*args*/)
+ {
++    Player* player = handler->GetPlayer();
+     Creature* target = handler->getSelectedCreature();
+ 
+-    auto locale = handler->GetSession()->GetSessionDbLocaleIndex();
++    auto locale = GetCommandLocale(handler);
++
++    if (!player)
++    {
++        handler->SendSysMessage(LANG_SELECT_CREATURE);
++        handler->SetSentErrorMessage(true);
++        return false;
++    }
+ 
+     if (!target)
+     {
