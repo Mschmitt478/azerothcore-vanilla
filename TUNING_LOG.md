@@ -55,6 +55,36 @@ Rollback:
 - Revert the Dockerfile patch-application step.
 - The preserved patch file can remain as documentation, or be removed if a module fork/upstream fix replaces it.
 
+## 2026-07-01 - EMBER-62 Live Deployment Validation
+
+No gameplay tuning changes were made.
+
+Backup:
+
+- `/srv/azerothcore/backups/2026-07-01-220619-pre-ember-62-deploy`
+
+Actions:
+
+- Built and pushed Warwid `master` images after PR `#6` was merged.
+- Refreshed live host ECR login and deployed the new `ac-authserver`, `ac-worldserver`, and `ac-db-import` images.
+- Ran `ac-db-import` before recreating the auth/world containers.
+- Database importer applied upstream character update `2026_06_24_00.sql` and world updates `2026_06_25_00.sql` through `2026_06_30_06.sql`.
+- Recreated `ac-worldserver` with image ID `sha256:fba595dcd527847bc1053856dd065078c8d1e70e7315ef9590364a803ed82e12`.
+- Verified live worldserver revision `bfed8ec04af8+ 2026-07-01 18:03:03 -0400 (master branch)`.
+- Ran `server info` through a pseudo-TTY Docker attach.
+- Ran `.ab getoffset` through the same console path that previously restarted the server.
+- Observed `.ab getoffset` return `Current Player Difficulty Offset = 0.`.
+- Verified `ac-worldserver` remained running with Docker `RestartCount = 0`.
+- Reran the read-only Phase 2 audit after deployment.
+- Recorded AHBot baseline after deployment: `250` bot-owned auctions, all quality `1`, total buyout `298.11g`, `0` vendor-resale candidates.
+- Recorded Individual Progression baseline after deployment: `18` hidden progression quests and `2381` condition rows.
+
+Rollback:
+
+- Restore the pre-deploy backup if database rollback is required.
+- Redeploy the previous ECR image digest if the new runtime image must be backed out.
+- Reverting the documentation-only evidence entry requires reverting this commit.
+
 ## Existing Small-Group Profile Values
 
 These values existed before this audit. They are recorded here so future tuning has a baseline.

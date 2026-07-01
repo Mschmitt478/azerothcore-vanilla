@@ -9,10 +9,11 @@ No gameplay tuning changes were made in this phase entry.
 | Ticket | Status | Scope |
 | --- | --- | --- |
 | `EMBER-35` | In progress | Phase 2 stable baseline validation umbrella. |
-| `EMBER-36` | Blocked by console crash risk | Validate AutoBalance live command output. |
+| `EMBER-36` | Partially validated | Validate AutoBalance live command output. |
 | `EMBER-37` | Blocked on 1-5 player client test | Validate Solo LFG for 1-5 players. |
 | `EMBER-38` | Partially validated | Validate Individual Progression gates. |
 | `EMBER-39` | Partially validated | Audit AHBot item mix and prices. |
+| `EMBER-62` | Live fix validated | Fix AutoBalance console command crash. |
 
 ## Live Access Findings
 
@@ -54,6 +55,39 @@ Interpretation:
 - A candidate source patch is preserved at `patches/warwid/mod-autobalance-console-null-session.patch`. Because `mod-autobalance` is a submodule that points at upstream `azerothcore/mod-autobalance`, the parent repo does not update the submodule pointer to a local-only commit.
 - The Warwid Docker build applies the patch before CMake configures modules, so rebuilt Warwid images can include the fix without forking the module immediately.
 
+## AutoBalance Console Fix Live Validation
+
+Observed 2026-07-01 after deploying merged `master` commit `bfed8ec04af8+`.
+
+Deployment evidence:
+
+- Pre-deploy live backup: `/srv/azerothcore/backups/2026-07-01-220619-pre-ember-62-deploy`
+- Deployed worldserver image ID: `sha256:fba595dcd527847bc1053856dd065078c8d1e70e7315ef9590364a803ed82e12`
+- Live worldserver revision: `bfed8ec04af8+ 2026-07-01 18:03:03 -0400 (master branch)`
+- Database importer applied upstream updates before the server recreate:
+  - Auth database: already up to date
+  - Character database: `2026_06_24_00.sql`
+  - World database: `2026_06_25_00.sql` through `2026_06_30_06.sql`
+
+Commands attempted through a real pseudo-TTY SSH attach to `ac-worldserver`:
+
+| Command | Result |
+| --- | --- |
+| `server info` | Succeeded. Reported AzerothCore `bfed8ec04af8+`, 0 connected players, uptime 1 minute. |
+| `.ab getoffset` | Succeeded. Returned `Current Player Difficulty Offset = 0.` |
+
+Post-check:
+
+- `ac-worldserver` remained running.
+- Docker `RestartCount` remained `0`.
+- Tailed logs showed the command output and no restart loop.
+
+Interpretation:
+
+- The preserved AutoBalance console null-session fix is present in the live Warwid image.
+- `.ab getoffset` is now safe from the bare server console on the deployed image.
+- `.ab mapstat` and `.ab creaturestat` still need in-game dungeon context from a GM character because meaningful output depends on an active map/selected creature.
+
 ## Read-Only Audit Script
 
 Added:
@@ -71,7 +105,7 @@ The script uses SSH and the live database container's existing `MYSQL_ROOT_PASSW
 
 ## AHBot Baseline
 
-Observed with the read-only audit on 2026-07-01.
+Observed with the read-only audit on 2026-07-01 before the live image update.
 
 | Metric | Result |
 | --- | ---: |
@@ -88,6 +122,22 @@ Interpretation:
 - No blue, purple, or raid-equivalent auctions were present in the current sample.
 - No current auction had a buyout below its vendor value.
 - This does not finish AH economy validation; it only establishes the first measured baseline. Continue sampling at level brackets `10`, `20`, `40`, `60`, `70`, and `80`.
+
+Observed with the read-only audit on 2026-07-01 after deploying `bfed8ec04af8+`.
+
+| Metric | Result |
+| --- | ---: |
+| Bot owner GUID | `2` |
+| Bot-owned auctions | `250` |
+| Total bot buyout value | `298.11g` |
+| Quality `1` auctions | `250` |
+| Quality `2+` auctions | `0` |
+| Vendor-resale candidates | `0` |
+
+Interpretation:
+
+- The live AHBot state remained conservative after the image/database update.
+- Auction value changed slightly from normal AHBot cycling, not from a config change.
 
 ## Individual Progression Baseline
 
@@ -118,13 +168,13 @@ Static/live config confirms:
 - `AutoBalance.RewardScaling.Money = 1`
 - `AutoBalance.reward.enable = 0`
 
-Runtime command output still required:
+Runtime command output status:
 
-- `.ab getoffset`
+- `.ab getoffset`: validated from the live console after `EMBER-62`.
 - `.ab mapstat` inside representative dungeons
 - `.ab creaturestat` on representative trash and bosses
 
-Do not collect these through the bare server console unless the console crash defect is fixed or proven harmless in a disposable environment.
+Collect map and creature stats through an in-game GM session inside representative instances.
 
 ## Solo LFG Baseline
 
