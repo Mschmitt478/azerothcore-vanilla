@@ -17,6 +17,26 @@ Rollback:
 - No gameplay rollback required.
 - To remove this audit doc pass, revert the documentation commit once created.
 
+## 2026-07-01 - Phase 2 Read-Only Validation
+
+No gameplay tuning changes were made.
+
+Actions:
+
+- Added a read-only live validation script at `tools/warwid/run-live-phase2-readonly-audit.sh`.
+- Ran the script against the live database.
+- Recorded AHBot baseline: `250` bot-owned auctions, all quality `1`, total buyout `286.13g`, `0` vendor-resale candidates.
+- Recorded Individual Progression baseline: `18` hidden progression quests and `2381` condition rows.
+- Confirmed `SOAP.Enabled = 0`, `Ra.Enable = 0`, and `Console.Enable = 1`.
+- Confirmed pseudo-TTY console attach works for `server info`.
+- Attempted `.ab getoffset` from the bare worldserver console. This restarted `ac-worldserver`; the container returned to running state with Docker `RestartCount = 1`.
+
+Rollback:
+
+- No config or database rollback required.
+- No live files were intentionally changed.
+- Do not run AutoBalance commands from the bare console again until the defect is isolated.
+
 ## Existing Small-Group Profile Values
 
 These values existed before this audit. They are recorded here so future tuning has a baseline.
@@ -68,4 +88,3 @@ These values existed before this audit. They are recorded here so future tuning 
 - Test performed:
 - Result:
 - Rollback:
-

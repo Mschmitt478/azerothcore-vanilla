@@ -9,7 +9,7 @@ No gameplay tuning changes were made in this phase entry.
 | Ticket | Status | Scope |
 | --- | --- | --- |
 | `EMBER-35` | In progress | Phase 2 stable baseline validation umbrella. |
-| `EMBER-36` | Blocked on character/session test | Validate AutoBalance live command output. |
+| `EMBER-36` | Blocked by console crash risk | Validate AutoBalance live command output. |
 | `EMBER-37` | Blocked on 1-5 player client test | Validate Solo LFG for 1-5 players. |
 | `EMBER-38` | Partially validated | Validate Individual Progression gates. |
 | `EMBER-39` | Partially validated | Audit AHBot item mix and prices. |
@@ -28,6 +28,29 @@ Impact:
 
 - `.ab mapstat`, `.ab creaturestat`, `.ab getoffset`, and `.ip get` still need an in-game GM character or a deliberate admin-command transport change.
 - Do not enable SOAP or RA casually on the public host. If remote command automation is needed, bind it to localhost/private admin access, create a backup first, and document the config delta.
+
+## AutoBalance Console Command Defect
+
+Observed 2026-07-01.
+
+Commands attempted through a real pseudo-TTY SSH attach to `ac-worldserver`:
+
+| Command | Result |
+| --- | --- |
+| `server info` | Succeeded. Reported AzerothCore `d15f74f18e94+`, 0 connected players, uptime 8 days 21 hours. |
+| `.ab getoffset` | Closed the attach session and restarted `ac-worldserver`. |
+
+Post-check:
+
+- `ac-worldserver` restarted once and returned to running state.
+- Docker `RestartCount` became `1`.
+- Tailed logs showed normal startup completion after the restart.
+
+Interpretation:
+
+- Do not run AutoBalance commands from the bare worldserver console until this is understood.
+- The likely safe path for `EMBER-36` is an in-game GM character/session or a deliberately secured SOAP/RA command path, not direct console execution.
+- This should be tracked as a defect because AutoBalance command availability was part of the requested validation scope.
 
 ## Read-Only Audit Script
 
@@ -98,6 +121,8 @@ Runtime command output still required:
 - `.ab getoffset`
 - `.ab mapstat` inside representative dungeons
 - `.ab creaturestat` on representative trash and bosses
+
+Do not collect these through the bare server console unless the console crash defect is fixed or proven harmless in a disposable environment.
 
 ## Solo LFG Baseline
 
