@@ -37,6 +37,24 @@ Rollback:
 - No live files were intentionally changed.
 - Do not run AutoBalance commands from the bare console again until the defect is isolated.
 
+## 2026-07-01 - EMBER-62 Docker Build Patch Application
+
+No live gameplay tuning changes were made.
+
+Actions:
+
+- Updated `apps/docker/Dockerfile` to copy `patches/` into the build stage.
+- Applied `patches/warwid/mod-autobalance-console-null-session.patch` during the Docker build before CMake configures modules.
+- Verified the patch applies cleanly with `git -C modules/mod-autobalance apply --check ../../patches/warwid/mod-autobalance-console-null-session.patch`.
+- Built Docker target `build` successfully with:
+  - `DOCKER_CONFIG=<temporary empty config> docker build -f apps/docker/Dockerfile --target build -t warwidcore-autobalance-console-fix:build .`
+- Build result: CMake configured all five Warwid modules, compiled patched `mod-autobalance/src/ABCommandScript.cpp`, linked `worldserver`, and exported image `warwidcore-autobalance-console-fix:build`.
+
+Rollback:
+
+- Revert the Dockerfile patch-application step.
+- The preserved patch file can remain as documentation, or be removed if a module fork/upstream fix replaces it.
+
 ## Existing Small-Group Profile Values
 
 These values existed before this audit. They are recorded here so future tuning has a baseline.

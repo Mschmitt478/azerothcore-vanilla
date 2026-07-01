@@ -51,7 +51,8 @@ Interpretation:
 - Do not run AutoBalance commands from the bare worldserver console until this is understood.
 - The likely safe path for `EMBER-36` is an in-game GM character/session or a deliberately secured SOAP/RA command path, not direct console execution.
 - This should be tracked as a defect because AutoBalance command availability was part of the requested validation scope.
-- A candidate source patch is preserved at `patches/warwid/mod-autobalance-console-null-session.patch`. Because `mod-autobalance` is a submodule that points at upstream `azerothcore/mod-autobalance`, this patch must be applied through a pushed fork or upstream PR before the parent repo should update the submodule pointer.
+- A candidate source patch is preserved at `patches/warwid/mod-autobalance-console-null-session.patch`. Because `mod-autobalance` is a submodule that points at upstream `azerothcore/mod-autobalance`, the parent repo does not update the submodule pointer to a local-only commit.
+- The Warwid Docker build applies the patch before CMake configures modules, so rebuilt Warwid images can include the fix without forking the module immediately.
 
 ## Read-Only Audit Script
 

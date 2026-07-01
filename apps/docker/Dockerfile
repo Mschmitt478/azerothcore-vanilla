@@ -75,10 +75,14 @@ COPY conf /azerothcore/conf
 COPY deps /azerothcore/deps
 COPY src /azerothcore/src
 COPY modules /azerothcore/modules
+COPY patches /azerothcore/patches
 
 ARG CACHEBUST=1
 
 WORKDIR /azerothcore/build
+
+RUN git -C /azerothcore/modules/mod-autobalance apply --check /azerothcore/patches/warwid/mod-autobalance-console-null-session.patch \
+    && git -C /azerothcore/modules/mod-autobalance apply /azerothcore/patches/warwid/mod-autobalance-console-null-session.patch
 
 RUN --mount=type=cache,target=/ccache,sharing=locked \
     # This may seem silly (and it is), but AzerothCore wants the git repo at

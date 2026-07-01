@@ -2,7 +2,7 @@
 
 These patches are parent-repo artifacts for changes that belong in external module submodules.
 
-Do not update the parent repository to point at a local-only submodule commit. For a patch to become live, either:
+Do not update the parent repository to point at a local-only submodule commit. For a patch to become live in local Docker images, apply it during the build stage before CMake configures modules. For a longer-term module fix, either:
 
 1. Apply it in a fork of the module, push that fork, and update `.gitmodules` plus the submodule commit; or
 2. Submit it upstream and update the submodule after upstream merges it.
@@ -26,3 +26,5 @@ Apply from `modules/mod-autobalance`:
 ```bash
 git apply ../../patches/warwid/mod-autobalance-console-null-session.patch
 ```
+
+The Warwid Docker build applies this patch automatically in `apps/docker/Dockerfile` before CMake runs.
