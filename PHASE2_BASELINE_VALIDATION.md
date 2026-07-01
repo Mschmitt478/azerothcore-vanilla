@@ -96,6 +96,8 @@ Added:
 
 - `tools/warwid/phase2_readonly_audit.sql`
 - `tools/warwid/run-live-phase2-readonly-audit.sh`
+- `tools/warwid/phase2_ahbot_bracket_audit.sql`
+- `tools/warwid/run-live-ahbot-bracket-audit.sh`
 
 Run from the repo root:
 
@@ -104,6 +106,12 @@ tools/warwid/run-live-phase2-readonly-audit.sh
 ```
 
 The script uses SSH and the live database container's existing `MYSQL_ROOT_PASSWORD` environment variable. It does not print or store the password.
+
+For AHBot bracket/item mix sampling, run:
+
+```bash
+tools/warwid/run-live-ahbot-bracket-audit.sh
+```
 
 ## AHBot Baseline
 
@@ -140,6 +148,54 @@ Interpretation:
 
 - The live AHBot state remained conservative after the image/database update.
 - Auction value changed slightly from normal AHBot cycling, not from a config change.
+
+Observed with the bracket audit on 2026-07-01 after deploying `bfed8ec04af8+`.
+
+| Metric | Result |
+| --- | ---: |
+| Bot-owned auctions | `250` |
+| Total bot buyout value | `298.11g` |
+| Average buyout | `1.1924g` |
+| Max buyout | `28.0000g` |
+| Quality `1` auctions | `250` |
+| Risky quality/level auctions | `0` |
+| Vendor-resale candidates | `0` |
+| Total possible vendor profit | `0.0000g` |
+
+Level bracket mix:
+
+| Bracket | Auctions | Total buyout |
+| --- | ---: | ---: |
+| Cosmetic/trade/low | `40` | `23.34g` |
+| Level 1-19 | `88` | `6.47g` |
+| Level 20-39 | `28` | `13.05g` |
+| Level 40-59 | `29` | `63.81g` |
+| Level 60-69 | `17` | `79.93g` |
+| Level 70-79 | `12` | `69.35g` |
+| Level 80 | `5` | `2.71g` |
+| No required level | `31` | `39.45g` |
+
+Class mix:
+
+| Class | Auctions | Total buyout |
+| --- | ---: | ---: |
+| Consumable | `62` | `221.44g` |
+| Glyph | `62` | `12.75g` |
+| Armor | `55` | `2.40g` |
+| Trade goods | `23` | `28.41g` |
+| Quest | `19` | `27.58g` |
+| Weapon | `12` | `0.52g` |
+| Misc | `10` | `3.07g` |
+| Recipe | `3` | `0.21g` |
+| Container | `2` | `1.71g` |
+| Quiver | `2` | `0.01g` |
+
+Interpretation:
+
+- The sampled AHBot state is not flooding blue, purple, or raid-equivalent gear.
+- The sample is heavily weighted toward consumables and glyphs by total value.
+- Trade goods are present but thin in this snapshot, so profession shopping still needs manual level-bracket checks before the economy is considered healthy.
+- Consumable pricing appears above vendor value in the sampled high-value rows, so no vendor loop is visible.
 
 ## Individual Progression Baseline
 

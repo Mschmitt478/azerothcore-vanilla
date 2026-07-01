@@ -87,6 +87,27 @@ Rollback:
 - Redeploy the previous ECR image digest if the new runtime image must be backed out.
 - Reverting the documentation-only evidence entry requires reverting this commit.
 
+## 2026-07-01 - EMBER-39 AHBot Bracket Audit
+
+No gameplay tuning changes were made.
+
+Actions:
+
+- Added a read-only AHBot bracket audit at `tools/warwid/phase2_ahbot_bracket_audit.sql`.
+- Added runner `tools/warwid/run-live-ahbot-bracket-audit.sh`.
+- Ran the audit against the live database.
+- Recorded `250` bot-owned auctions with total buyout `298.11g`.
+- Recorded all `250` auctions as quality `1`.
+- Recorded `0` risky quality/level auctions.
+- Recorded `0` vendor-resale candidates and `0.0000g` possible vendor profit.
+- Recorded level-bracket mix: `40` cosmetic/trade/low, `88` level 1-19, `28` level 20-39, `29` level 40-59, `17` level 60-69, `12` level 70-79, `5` level 80, `31` no required level.
+- Recorded class mix led by consumables (`62`, `221.44g`) and glyphs (`62`, `12.75g`), with only `23` trade-good auctions.
+
+Rollback:
+
+- No config or database rollback required.
+- To remove the audit tooling, revert the commit that adds the two `tools/warwid` files.
+
 ## Existing Small-Group Profile Values
 
 These values existed before this audit. They are recorded here so future tuning has a baseline.
