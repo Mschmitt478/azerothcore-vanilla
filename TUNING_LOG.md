@@ -74,6 +74,8 @@ Actions:
 - Ran `server info` through a pseudo-TTY Docker attach.
 - Ran `.ab getoffset` through the same console path that previously restarted the server.
 - Observed `.ab getoffset` return `Current Player Difficulty Offset = 0.`.
+- Ran `.ab mapstat` from the bare console and observed a safe context error: `This command can only be used in a dungeon or raid.`
+- Ran `.ab creaturestat` from the bare console and observed a safe context error: `You should select a creature.`
 - Verified `ac-worldserver` remained running with Docker `RestartCount = 0`.
 - Reran the read-only Phase 2 audit after deployment.
 - Recorded AHBot baseline after deployment: `250` bot-owned auctions, all quality `1`, total buyout `298.11g`, `0` vendor-resale candidates.

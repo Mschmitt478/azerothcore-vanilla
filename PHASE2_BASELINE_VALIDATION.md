@@ -75,6 +75,8 @@ Commands attempted through a real pseudo-TTY SSH attach to `ac-worldserver`:
 | --- | --- |
 | `server info` | Succeeded. Reported AzerothCore `bfed8ec04af8+`, 0 connected players, uptime 1 minute. |
 | `.ab getoffset` | Succeeded. Returned `Current Player Difficulty Offset = 0.` |
+| `.ab mapstat` | Failed safely outside player context. Returned `This command can only be used in a dungeon or raid.` |
+| `.ab creaturestat` | Failed safely outside player context. Returned `You should select a creature.` |
 
 Post-check:
 
@@ -85,7 +87,7 @@ Post-check:
 Interpretation:
 
 - The preserved AutoBalance console null-session fix is present in the live Warwid image.
-- `.ab getoffset` is now safe from the bare server console on the deployed image.
+- `.ab getoffset`, `.ab mapstat`, and `.ab creaturestat` are now safe from the bare server console on the deployed image.
 - `.ab mapstat` and `.ab creaturestat` still need in-game dungeon context from a GM character because meaningful output depends on an active map/selected creature.
 
 ## Read-Only Audit Script
@@ -171,8 +173,8 @@ Static/live config confirms:
 Runtime command output status:
 
 - `.ab getoffset`: validated from the live console after `EMBER-62`.
-- `.ab mapstat` inside representative dungeons
-- `.ab creaturestat` on representative trash and bosses
+- `.ab mapstat`: validated crash-safe from the live console without player context; representative dungeon output still required.
+- `.ab creaturestat`: validated crash-safe from the live console without selected creature context; representative trash and boss output still required.
 
 Collect map and creature stats through an in-game GM session inside representative instances.
 
