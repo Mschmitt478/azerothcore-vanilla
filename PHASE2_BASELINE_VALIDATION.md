@@ -206,6 +206,86 @@ Interpretation:
 - Trade goods are present but thin in this snapshot, so profession shopping still needs manual level-bracket checks before the economy is considered healthy.
 - Consumable pricing appears above vendor value in the sampled high-value rows, so no vendor loop is visible.
 
+## AHBot Live-Server Market Profile
+
+Prepared 2026-07-02.
+
+Matt requested an AHBot market that feels more like a live server, with broader
+auction variety across many item types rather than a mostly material/common-item
+market. The implementation path is:
+
+- Keep seller/buyer enabled only when the dedicated AHBot account/character IDs
+  are present.
+- Increase the bot target from `250` to `750` auctions per auction house, with
+  `500` as the lower refill threshold.
+- Reserve explicit market space for trade goods, vendor goods, general loot,
+  profession items, weapons, armor, recipes, and containers.
+- Allow more green, blue, and occasional purple non-material auctions, while
+  keeping legendary/artifact buckets at `0`.
+- Keep risk controls on: no conjured items, money-loot containers, lootable
+  containers, keys, duration items, or BOP/quest no-required-level shortcuts.
+- Keep AHBot `OtherTradeGoods` disabled. Allow non-trade `OtherItems` only with
+  item-level lower/upper bounds, because an unconstrained first live sample
+  admitted internal-looking monster/junk items.
+- Set the poor-item market allocation to `0`; this profile is intended to feel
+  alive, not to stock trash clutter.
+- Cap non-trade item level at `187` for this profile so the first broadening pass
+  does not seed raid-equivalent gear.
+
+Artifacts:
+
+- `tools/warwid/ahbot_live_server_market_profile.sql`
+- `tools/warwid/ahbot_clear_bot_owned_auctions.sql`
+- `tools/warwid/apply-live-ahbot-market-profile.sh`
+- `tools/warwid/phase2_ahbot_bracket_audit.sql`
+
+Validation target after deploy/restart:
+
+- Bot-owned auctions should climb above the old `250` ceiling.
+- Quality mix should include mostly common/uncommon, some rare, and a very small
+  epic slice.
+- Class/subclass mix should show more than consumables/glyphs/trade goods.
+- Vendor-resale candidates should remain `0`.
+- Risky quality/level auctions should remain bounded and reviewed manually.
+
+Live result observed 2026-07-02 after backup
+`/srv/azerothcore/backups/2026-07-02-201438-pre-ahbot-live-server-market-profile`,
+bot-owned auction cleanup, and worldserver recreate:
+
+| Metric | Result |
+| --- | ---: |
+| Bot-owned auctions | `750` |
+| Total bot buyout value | `967.56g` |
+| Average buyout | `1.2901g` |
+| Max buyout | `56.7500g` |
+| Vendor-resale candidates | `0` |
+| Risky quality/level auctions | `0` |
+| Quality `1` auctions | `750` |
+
+Class mix:
+
+| Class | Auctions | Total buyout |
+| --- | ---: | ---: |
+| Armor | `206` | `293.65g` |
+| Consumable | `195` | `451.28g` |
+| Glyph | `122` | `22.99g` |
+| Recipe | `90` | `68.68g` |
+| Weapon | `74` | `96.18g` |
+| Misc | `27` | `17.87g` |
+| Container | `17` | `7.11g` |
+| Quest | `7` | `5.54g` |
+| Other classes | `12` | `7.76g` |
+
+Interpretation:
+
+- The market now feels materially more populated than the previous `250`-auction
+  sample and covers many more shopping categories.
+- The profile stayed safe on the two immediate economy checks: no vendor resale
+  loop and no risky quality/level auctions.
+- The module still produced common-quality auctions only in this sample. Getting
+  reliable uncommon/rare/epic stocking likely needs curated item sources or a
+  purpose-built whitelist instead of only changing AHBot percentages.
+
 Observed with the bracket audit on 2026-07-01 EDT after SSH access was restored.
 
 | Metric | Result |

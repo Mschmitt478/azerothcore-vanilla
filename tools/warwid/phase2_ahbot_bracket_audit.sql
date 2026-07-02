@@ -58,6 +58,7 @@ GROUP BY it.Quality
 ORDER BY it.Quality;
 
 SELECT
+    ah.houseid,
     it.class,
     CASE it.class
         WHEN 0 THEN 'consumable'
@@ -79,8 +80,56 @@ FROM acore_characters.auctionhouse ah
 JOIN acore_characters.item_instance ii ON ii.guid = ah.itemguid
 JOIN acore_world.item_template it ON it.entry = ii.itemEntry
 WHERE ii.owner_guid = @ahbot_guid
-GROUP BY it.class
-ORDER BY auctions DESC, it.class;
+GROUP BY ah.houseid, it.class
+ORDER BY ah.houseid, auctions DESC, it.class;
+
+SELECT
+    ah.houseid,
+    it.class,
+    CASE it.class
+        WHEN 0 THEN 'consumable'
+        WHEN 1 THEN 'container'
+        WHEN 2 THEN 'weapon'
+        WHEN 4 THEN 'armor'
+        WHEN 7 THEN 'trade goods'
+        WHEN 9 THEN 'recipe'
+        WHEN 11 THEN 'quiver'
+        WHEN 12 THEN 'quest'
+        WHEN 15 THEN 'misc'
+        WHEN 16 THEN 'glyph'
+        ELSE 'other'
+    END AS class_name,
+    it.subclass,
+    COUNT(*) AS auctions,
+    ROUND(SUM(ah.buyoutprice) / 10000, 2) AS total_buyout_gold,
+    ROUND(AVG(ah.buyoutprice) / 10000, 4) AS avg_buyout_gold
+FROM acore_characters.auctionhouse ah
+JOIN acore_characters.item_instance ii ON ii.guid = ah.itemguid
+JOIN acore_world.item_template it ON it.entry = ii.itemEntry
+WHERE ii.owner_guid = @ahbot_guid
+GROUP BY ah.houseid, it.class, it.subclass
+ORDER BY ah.houseid, auctions DESC, it.class, it.subclass
+LIMIT 80;
+
+SELECT
+    auctionhouse,
+    name,
+    minitems,
+    maxitems,
+    percentgreytradegoods + percentwhitetradegoods + percentgreentradegoods +
+        percentbluetradegoods + percentpurpletradegoods + percentorangetradegoods +
+        percentyellowtradegoods + percentgreyitems + percentwhiteitems +
+        percentgreenitems + percentblueitems + percentpurpleitems +
+        percentorangeitems + percentyellowitems AS profile_percent_total,
+    percentwhitetradegoods,
+    percentgreentradegoods,
+    percentbluetradegoods,
+    percentwhiteitems,
+    percentgreenitems,
+    percentblueitems,
+    percentpurpleitems
+FROM acore_world.mod_auctionhousebot
+ORDER BY auctionhouse;
 
 SELECT
     COUNT(*) AS vendor_resale_candidates,
