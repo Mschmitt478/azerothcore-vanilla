@@ -1,0 +1,33 @@
+{
+  "scenario_id": "deadmines-1",
+  "dungeon_name": "Deadmines",
+  "map_id": 36,
+  "entrance_location": {
+    "map": 0,
+    "zone": "Westfall",
+    "description": "Moonbrook mine entrance path to The Deadmines portal"
+  },
+  "party_size": 1,
+  "faction": "ALLIANCE",
+  "level": 20,
+  "composition": [
+    { "slot": 1, "class": "PALADIN", "spec": "RETRIBUTION", "role": "TANK" }
+  ],
+  "progression_state": "NONE",
+  "autobalance_profile": "CURRENT_SERVER_CONFIG",
+  "lfg_mode": "MANUAL_ENTRY",
+  "timeout_minutes": 60,
+  "success_thresholds": {
+    "completion_required": true,
+    "boss_kills_min": 6,
+    "deaths_max": 6,
+    "wipes_max": 2
+  },
+  "reward_thresholds": {
+    "compare_to_5_player_baseline": true,
+    "total_reward_must_not_exceed_5p_baseline": true,
+    "raw_gold_copper_max": null,
+    "xp_max": null,
+    "item_value_copper_max": null
+  }
+}

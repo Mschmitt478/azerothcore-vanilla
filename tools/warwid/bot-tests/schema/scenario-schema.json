@@ -1,0 +1,31 @@
+{
+  "description": "Documentation schema for Warwid manual-assisted bot dungeon scenarios. The validator in ../validate-scenarios.py enforces this shape without external dependencies.",
+  "required_fields": [
+    "scenario_id",
+    "dungeon_name",
+    "map_id",
+    "entrance_location",
+    "party_size",
+    "faction",
+    "level",
+    "composition",
+    "progression_state",
+    "autobalance_profile",
+    "lfg_mode",
+    "timeout_minutes",
+    "success_thresholds",
+    "reward_thresholds"
+  ],
+  "valid_party_size": [1, 2, 3, 4, 5],
+  "known_dungeons": {
+    "Ragefire Chasm": { "map_id": 389 },
+    "Deadmines": { "map_id": 36 }
+  },
+  "non_invasive_guards": [
+    "No Playerbots or NPCBots install",
+    "No SOAP or RA enablement",
+    "No live database writes",
+    "No tuning or config mutation",
+    "No live server restart"
+  ]
+}
