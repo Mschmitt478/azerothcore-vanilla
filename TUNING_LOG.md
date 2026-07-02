@@ -104,6 +104,52 @@ Rollback:
 - No config or database rollback required.
 - To remove the audit tooling, revert the commit that adds the two `tools/warwid` files.
 
+## 2026-07-02 - AHBot Live-Server Market Profile Prepared
+
+No live gameplay tuning changes were made by this documentation entry alone.
+
+Actions:
+
+- Updated the Warwid small-group config profile to keep broader AHBot source
+  filters on future image deploys.
+- Added `tools/warwid/ahbot_live_server_market_profile.sql` to set the
+  persistent `mod_auctionhousebot` table to a larger, more varied market mix.
+- Added `tools/warwid/apply-live-ahbot-market-profile.sh` to back up the live
+  databases/config, update persistent AHBot config, apply the SQL profile, and
+  optionally recreate the worldserver.
+- Added `tools/warwid/ahbot_clear_bot_owned_auctions.sql` for controlled AHBot
+  auction cleanup after a profile mistake or deliberate market reseed.
+- Extended the AHBot bracket audit with auction-house, class/subclass, and
+  market-profile output.
+
+Live application:
+
+- Applied to the live database/config on 2026-07-02.
+- Created backups:
+  - `/srv/azerothcore/backups/2026-07-02-200134-pre-ahbot-live-server-market-profile`
+  - `/srv/azerothcore/backups/2026-07-02-200610-pre-ahbot-live-server-market-profile`
+  - `/srv/azerothcore/backups/2026-07-02-201438-pre-ahbot-live-server-market-profile`
+- Cleared bot-owned auctions after the final profile so AHBot could reseed from
+  the corrected filters.
+- Recreated `ac-worldserver`; Docker restart count remained `0`.
+- Final read-only audit recorded `750` bot-owned auctions, `0` vendor-resale
+  candidates, `0` risky quality/level auctions, and broad class coverage across
+  armor, consumables, glyphs, recipes, weapons, misc, containers, quest items,
+  quivers, ammunition, gems, and class/projectile buckets.
+
+Follow-up:
+
+- The final sample remained common-quality only. If Matt wants rare green/blue
+  world-drop-style AH stock, create a curated AHBot item source/whitelist instead
+  of continuing broad config-only tuning.
+
+Rollback:
+
+- Restore the generated pre-change backup from
+  `/srv/azerothcore/backups/*-pre-ahbot-live-server-market-profile`.
+- Or set the AHBot profile back to the previous `250` min/max and default module
+  percentages, then restore the previous `mod_ahbot.conf`.
+
 ## Existing Small-Group Profile Values
 
 These values existed before this audit. They are recorded here so future tuning has a baseline.
