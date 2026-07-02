@@ -1,0 +1,35 @@
+{
+  "scenario_id": "ragefire-chasm-3",
+  "dungeon_name": "Ragefire Chasm",
+  "map_id": 389,
+  "entrance_location": {
+    "map": 1,
+    "zone": "Orgrimmar",
+    "description": "Ragefire Chasm portal inside the Cleft of Shadow"
+  },
+  "party_size": 3,
+  "faction": "HORDE",
+  "level": 18,
+  "composition": [
+    { "slot": 1, "class": "WARRIOR", "spec": "PROTECTION", "role": "TANK" },
+    { "slot": 2, "class": "PRIEST", "spec": "HOLY", "role": "HEALER" },
+    { "slot": 3, "class": "MAGE", "spec": "FIRE", "role": "DPS" }
+  ],
+  "progression_state": "NONE",
+  "autobalance_profile": "CURRENT_SERVER_CONFIG",
+  "lfg_mode": "MANUAL_ENTRY",
+  "timeout_minutes": 45,
+  "success_thresholds": {
+    "completion_required": true,
+    "boss_kills_min": 4,
+    "deaths_max": 5,
+    "wipes_max": 2
+  },
+  "reward_thresholds": {
+    "compare_to_5_player_baseline": true,
+    "total_reward_must_not_exceed_5p_baseline": true,
+    "raw_gold_copper_max": null,
+    "xp_max": null,
+    "item_value_copper_max": null
+  }
+}
