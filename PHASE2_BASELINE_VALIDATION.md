@@ -4,6 +4,10 @@ Phase: 2 - verify the live small-group stack before combat or economy tuning.
 
 No gameplay tuning changes were made in this phase entry.
 
+Runtime execution procedure and blank evidence templates live in
+`PHASE2_RUNTIME_VALIDATION_RUNBOOK.md`. Keep this document focused on baseline
+findings and status changes.
+
 ## Ticket Scope
 
 | Ticket | Status | Scope |
@@ -113,6 +117,11 @@ For AHBot bracket/item mix sampling, run:
 tools/warwid/run-live-ahbot-bracket-audit.sh
 ```
 
+Live SSH access was revalidated on 2026-07-01 EDT with the approved EC2 key.
+The host responded, `ac-database` was healthy, and `ac-authserver` plus
+`ac-worldserver` were running the deployed `master-*` images with Docker
+restart count `0`.
+
 ## AHBot Baseline
 
 Observed with the read-only audit on 2026-07-01 before the live image update.
@@ -196,6 +205,47 @@ Interpretation:
 - The sample is heavily weighted toward consumables and glyphs by total value.
 - Trade goods are present but thin in this snapshot, so profession shopping still needs manual level-bracket checks before the economy is considered healthy.
 - Consumable pricing appears above vendor value in the sampled high-value rows, so no vendor loop is visible.
+
+Observed with the bracket audit on 2026-07-01 EDT after SSH access was restored.
+
+| Metric | Result |
+| --- | ---: |
+| Bot-owned auctions | `250` |
+| Total bot buyout value | `361.86g` |
+| Average buyout | `1.4474g` |
+| Max buyout | `28.0000g` |
+| Quality `1` auctions | `250` |
+| Risky quality/level auctions | `0` |
+| Vendor-resale candidates | `0` |
+| Total possible vendor profit | `0.0000g` |
+
+Latest level bracket mix:
+
+| Bracket | Auctions | Total buyout |
+| --- | ---: | ---: |
+| Cosmetic/trade/low | `47` | `23.72g` |
+| Level 1-19 | `63` | `4.06g` |
+| Level 20-39 | `25` | `15.21g` |
+| Level 40-59 | `25` | `59.09g` |
+| Level 60-69 | `9` | `72.46g` |
+| Level 70-79 | `8` | `48.50g` |
+| Level 80 | `3` | `1.78g` |
+| No required level | `70` | `137.04g` |
+
+Latest class mix:
+
+| Class | Auctions | Total buyout |
+| --- | ---: | ---: |
+| Trade goods | `87` | `134.72g` |
+| Consumable | `49` | `186.13g` |
+| Glyph | `40` | `8.84g` |
+| Armor | `39` | `1.23g` |
+| Quest | `17` | `27.16g` |
+| Weapon | `7` | `0.19g` |
+| Misc | `6` | `1.73g` |
+| Container | `2` | `1.71g` |
+| Recipe | `2` | `0.13g` |
+| Quiver | `1` | `0.00g` |
 
 ## Individual Progression Baseline
 

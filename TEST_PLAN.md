@@ -2,7 +2,12 @@
 
 ## Method
 
-Record data before changing tuning. Run one variable change at a time. Keep combat, economy, and progression results separate.
+Record data before changing tuning. Run one variable change at a time. Keep
+combat, economy, and progression results separate.
+
+For the Phase 2 runtime gate, use `PHASE2_RUNTIME_VALIDATION_RUNBOOK.md` and
+the templates under `tools/warwid/templates/` to record consistent evidence
+before any tuning.
 
 Use these commands during instance tests:
 
@@ -138,7 +143,9 @@ Initial progression phase documentation target:
 | 9-13 | TBC tiers | TBC dungeons/raids through T5 |
 | 14-18 | WotLK tiers | WotLK tiers through T5 |
 
-Confirm exact names in `modules/mod-individual-progression/src/IndividualProgression.h` before publishing player-facing docs.
+Confirm exact names in
+`modules/mod-individual-progression/src/IndividualProgression.h` before
+publishing player-facing docs.
 
 ## Difficulty Targets
 
@@ -164,4 +171,3 @@ At levels `10`, `20`, `40`, `60`, `70`, `80`:
 - Record low/median/high prices.
 - Record whether vendor resale loops exist.
 - Record whether AHBot floods best-in-slot or raid-equivalent gear.
-

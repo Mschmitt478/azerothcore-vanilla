@@ -1,5 +1,9 @@
 # Tuning Log
 
+Do not add Phase 2 tuning entries until the runtime gate in
+`PHASE2_RUNTIME_VALIDATION_RUNBOOK.md` has enough evidence to justify a change.
+Baseline findings remain in `PHASE2_BASELINE_VALIDATION.md`.
+
 ## 2026-07-01 - Phase 1 Audit
 
 No gameplay tuning changes were made.
@@ -36,6 +40,30 @@ Rollback:
 - No config or database rollback required.
 - No live files were intentionally changed.
 - Do not run AutoBalance commands from the bare console again until the defect is isolated.
+
+## 2026-07-01 - Phase 2 Live SSH Recheck
+
+No gameplay tuning changes were made.
+
+Actions:
+
+- Installed the approved EC2 private key in the local Linux SSH path with
+  `0600` permissions.
+- Revalidated SSH access to the live host.
+- Confirmed `ac-database` was healthy and `ac-authserver`/`ac-worldserver` were
+  running the deployed `master-*` images with Docker restart count `0`.
+- Re-ran the read-only Phase 2 audit and AHBot bracket audit against the live
+  database.
+- Recorded AHBot baseline: `250` bot-owned auctions, all quality `1`, total
+  buyout `361.86g`, `0` risky quality/level auctions, and `0` vendor-resale
+  candidates.
+- Confirmed Individual Progression baseline still has `18` hidden progression
+  quests and `2381` condition rows.
+
+Rollback:
+
+- No config or database rollback required.
+- No live files were intentionally changed.
 
 ## 2026-07-01 - EMBER-62 Docker Build Patch Application
 
