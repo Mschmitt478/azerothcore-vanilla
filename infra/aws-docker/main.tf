@@ -20,6 +20,8 @@ data "aws_subnet" "selected" {
 }
 
 data "aws_ami" "ubuntu" {
+  count = var.ami_id == null ? 1 : 0
+
   most_recent = true
   owners      = ["099720109477"]
 
@@ -44,6 +46,15 @@ locals {
   subnet_id              = var.subnet_id == null ? sort(data.aws_subnets.selected.ids)[0] : var.subnet_id
   data_volume_disk_by_id = "/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_${replace(aws_ebs_volume.azerothcore_data.id, "-", "")}"
   ecr_registry           = split("/", aws_ecr_repository.azerothcore.repository_url)[0]
+}
+
+resource "aws_route53_zone" "warwid" {
+  name    = var.dns_zone_name
+  comment = "Future authoritative DNS zone for Warwid. Registrar delegation remains manual."
+
+  tags = {
+    Name = var.dns_zone_name
+  }
 }
 
 resource "aws_ecr_repository" "azerothcore" {
@@ -148,6 +159,30 @@ resource "aws_security_group" "azerothcore" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "HTTP for Caddy and certificate issuance"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS for web services"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description     = "Account portal origin from ALB"
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.account_portal_alb.id]
+  }
+
   dynamic "ingress" {
     for_each = length(var.admin_cidrs) > 0 ? [1] : []
 
@@ -202,7 +237,7 @@ resource "aws_ebs_volume" "azerothcore_data" {
 }
 
 resource "aws_instance" "azerothcore" {
-  ami                         = data.aws_ami.ubuntu.id
+  ami                         = var.ami_id == null ? data.aws_ami.ubuntu[0].id : var.ami_id
   instance_type               = var.instance_type
   iam_instance_profile        = aws_iam_instance_profile.instance.name
   subnet_id                   = local.subnet_id

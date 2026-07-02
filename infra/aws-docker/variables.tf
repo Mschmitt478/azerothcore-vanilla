@@ -28,6 +28,12 @@ variable "instance_type" {
   default     = "t3.large"
 }
 
+variable "ami_id" {
+  description = "Optional fixed AMI ID for the EC2 host. Set this after deployment to avoid replacing the server when the latest Ubuntu AMI changes."
+  type        = string
+  default     = null
+}
+
 variable "ssh_key_name" {
   description = "Existing EC2 key pair name for SSH. Leave null to launch without an EC2 key pair."
   type        = string
@@ -104,6 +110,42 @@ variable "realm_address" {
   description = "Public realm address written to the auth realmlist table and used in client realmlist.wtf."
   type        = string
   default     = "play.warwid.com"
+}
+
+variable "account_portal_hostname" {
+  description = "Public hostname for the Warwid account portal."
+  type        = string
+  default     = "accounts.warwid.com"
+}
+
+variable "dns_zone_name" {
+  description = "Public DNS zone to prepare in Route 53. Delegation is manual at the registrar."
+  type        = string
+  default     = "warwid.com"
+}
+
+variable "account_portal_certificate_arn" {
+  description = "Issued ACM certificate ARN for the account portal ALB HTTPS listener. Leave null until DNS validation has issued the certificate."
+  type        = string
+  default     = null
+}
+
+variable "account_portal_origin_instance_id" {
+  description = "Existing EC2 instance ID that serves the account portal origin. Set this to avoid pulling the mutable aws_instance resource into targeted edge plans."
+  type        = string
+  default     = null
+}
+
+variable "account_portal_waf_rate_limit" {
+  description = "Five-minute per-IP AWS WAF rate limit for the account portal."
+  type        = number
+  default     = 500
+}
+
+variable "account_portal_sensitive_api_rate_limit" {
+  description = "Five-minute per-IP AWS WAF rate limit for sensitive account API paths."
+  type        = number
+  default     = 50
 }
 
 variable "auth_port" {
