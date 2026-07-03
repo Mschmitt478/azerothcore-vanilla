@@ -28,6 +28,12 @@ cmake --build build --target worldserver -j"$(nproc)"
 
 Use the existing proof DB/config flow for this branch. Do not import this into live deploy defaults.
 
+If the `modules/mod-playerbots` submodule commit is not available from a remote yet, apply the parent-repo patch artifacts to a clean `mod-playerbots` checkout:
+
+```bash
+git -C modules/mod-playerbots am ../../patches/warwid/playerbots-proof/*.patch
+```
+
 ## Run Examples
 
 From the `worldserver` console, without a client session:
