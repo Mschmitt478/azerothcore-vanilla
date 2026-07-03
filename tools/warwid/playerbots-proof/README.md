@@ -18,22 +18,43 @@ against the normal Warwid `master` checkout.
 
 ## Disposable Build
 
-Use a local build and install path owned by this worktree:
+Use a local build and install path owned by this worktree. The successful
+no-sudo proof build used locally extracted dependency packages under
+`var/deps/apt-root`, a local Boost build under `var/deps/boost-1.83`, and the
+install prefix `var/install/playerbots-proof`.
 
 ```bash
 cd /home/bnbland/TheMatrix/Projects/azerothcore-playerbots-proof
 git submodule update --init --recursive modules/mod-playerbots
-mkdir -p var/build/playerbots-proof env/dist
+mkdir -p var/build/playerbots-proof var/install/playerbots-proof
 
-cmake -S . -B var/build/playerbots-proof \
+Boost_ROOT="$PWD/var/deps/boost-1.83" cmake -S . -B var/build/playerbots-proof \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DTOOLS_BUILD=none \
   -DSCRIPTS=static \
   -DMODULES=static \
-  -DCMAKE_INSTALL_PREFIX="$PWD/env/dist"
+  -DNOJEM=1 \
+  -DCMAKE_INSTALL_PREFIX="$PWD/var/install/playerbots-proof" \
+  -DBoost_ROOT="$PWD/var/deps/boost-1.83" \
+  -DOPENSSL_ROOT_DIR="$PWD/var/deps/apt-root/usr" \
+  -DOPENSSL_INCLUDE_DIR="$PWD/var/deps/apt-root/usr/include" \
+  -DOPENSSL_SSL_LIBRARY=/usr/lib/x86_64-linux-gnu/libssl.so.3 \
+  -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/x86_64-linux-gnu/libcrypto.so.3 \
+  -DZLIB_INCLUDE_DIR="$PWD/var/deps/apt-root/usr/include" \
+  -DZLIB_LIBRARY="$PWD/var/deps/apt-root/usr/lib/x86_64-linux-gnu/libz.so" \
+  -DREADLINE_INCLUDE_DIR="$PWD/var/deps/apt-root/usr/include" \
+  -DREADLINE_LIBRARY="$PWD/var/deps/apt-root/usr/lib/x86_64-linux-gnu/libreadline.so" \
+  -DMYSQL_INCLUDE_DIR="$PWD/var/deps/apt-root/usr/include/mysql" \
+  -DMYSQL_LIBRARY="$PWD/var/deps/apt-root/usr/lib/x86_64-linux-gnu/libmysqlclient.so"
 
 cmake --build var/build/playerbots-proof --target install -- -j"$(nproc)"
 ```
+
+With GCC 15, this fork's bundled jemalloc needs
+`deps/jemalloc/include/jemalloc/internal/safety_check.h` to declare
+`safety_check_set_abort(void (*abort_fn)(const char *))`, matching the existing
+source definition. `-DNOJEM=1` is accepted by CMake but does not keep jemalloc
+out of the build in this tree.
 
 Local Docker is not available in this shell because the current process does not
 have the active `docker` group. Use a fresh group session or an explicitly
@@ -85,8 +106,8 @@ mysql -u acore -p acore_playerbots_pb \
 Copy the installed module config and keep both `.dist` and `.conf` present:
 
 ```bash
-cp env/dist/etc/modules/playerbots.conf.dist \
-   env/dist/etc/modules/playerbots.conf
+cp var/install/playerbots-proof/etc/modules/playerbots.conf.dist \
+   var/install/playerbots-proof/etc/modules/playerbots.conf
 ```
 
 Use a small proof population instead of the module defaults:
@@ -157,6 +178,9 @@ bots:
 
 - Docker cannot be run from this shell without a fresh docker-group session or
   an explicitly approved sudo path.
+- No local MySQL/MariaDB server or client binary is available in this shell, so
+  isolated `_pb` database creation and server boot still need an approved
+  disposable DB path.
 - The existing Warwid modules are not yet present in this proof worktree. Add
   them after `mod-playerbots` config/build proves clean, then resolve any compile
   conflicts against the Playerbot fork.
