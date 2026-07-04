@@ -1,11 +1,14 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From fd8824a9d587da55dba4a1e4d550e441b94dc6e9 Mon Sep 17 00:00:00 2001
 From: Matthew Schmitt <mschmitt478@gmail.com>
 Date: Fri, 3 Jul 2026 19:29:59 -0400
-Subject: [PATCH 2/2] Use LFG teleport for proof dungeon placement
+Subject: [PATCH 2/3] Use LFG teleport for proof dungeon placement
 
+---
+ src/Bot/RandomPlayerbotMgr.cpp | 35 ++++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 14 deletions(-)
 
 diff --git a/src/Bot/RandomPlayerbotMgr.cpp b/src/Bot/RandomPlayerbotMgr.cpp
-index a390a4c561ff41564da016128040db9282f2b185..484c3204c634739c1c51f6aa11fbdaf0cc123236 100644
+index a390a4c5..484c3204 100644
 --- a/src/Bot/RandomPlayerbotMgr.cpp
 +++ b/src/Bot/RandomPlayerbotMgr.cpp
 @@ -2910,6 +2910,18 @@ bool RandomPlayerbotMgr::HandleProofDungeonCommand(ChatHandler* handler, std::st

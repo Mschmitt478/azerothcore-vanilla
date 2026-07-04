@@ -62,6 +62,9 @@ playerbots rndbot proofdungeon deadmines 2 run=201 warrior priest
 playerbots rndbot proofdungeon deadmines 3 run=301 warrior priest mage
 playerbots rndbot proofdungeon deadmines 5 run=501 warrior priest mage rogue hunter
 
+playerbots rndbot proofreset all
+playerbots rndbot proofreset run=501
+
 playerbots rndbot proofcrawl deadmines run=101 status
 playerbots rndbot proofcrawl deadmines run=201 2
 playerbots rndbot proofcrawl deadmines run=501 3
@@ -124,6 +127,15 @@ playerbots rndbot proofcrawl deadmines run=501 status
 `proofcrawl` uses early hard-coded proof waypoints for RFC and Deadmines. It does not try to solve the whole dungeon; it moves the currently staged proof bots toward nearby early pulls and logs `PLAYERBOTS_PROOF_CRAWL` evidence with live instance id, position, class, level, combat, death, and health state.
 
 When `run=<id>` is supplied, `proofcrawl` only moves or reports bots staged with that same run id. This allows multiple proof groups with different sizes and class compositions to be staged in the same disposable world and advanced independently.
+
+`proofreset` clears proof-only reservations between matrix passes:
+
+```text
+playerbots rndbot proofreset all
+playerbots rndbot proofreset run=501
+```
+
+Use it before starting a fresh matrix. Proof reservations intentionally hold selected bots for 30 minutes so evidence capture is stable; without a reset, later class-specific runs can fail with `insufficient_candidates` because the desired class is still reserved by another proof run.
 
 Supported first-pass step range is `1-5`. Run `status` after each step settles.
 

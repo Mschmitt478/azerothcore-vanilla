@@ -1,0 +1,94 @@
+From ede6a31ef3a4c6acb437f7dd680e4f28eb3c285b Mon Sep 17 00:00:00 2001
+From: Matthew Schmitt <mschmitt478@gmail.com>
+Date: Fri, 3 Jul 2026 20:52:25 -0400
+Subject: [PATCH 3/3] Add proof dungeon reset command
+
+---
+ src/Bot/RandomPlayerbotMgr.cpp | 51 ++++++++++++++++++++++++++++++++++
+ src/Bot/RandomPlayerbotMgr.h   |  1 +
+ 2 files changed, 52 insertions(+)
+
+diff --git a/src/Bot/RandomPlayerbotMgr.cpp b/src/Bot/RandomPlayerbotMgr.cpp
+index 484c3204..2c028984 100644
+--- a/src/Bot/RandomPlayerbotMgr.cpp
++++ b/src/Bot/RandomPlayerbotMgr.cpp
+@@ -3004,6 +3004,51 @@ bool RandomPlayerbotMgr::HandleProofDungeonCommand(ChatHandler* handler, std::st
+     return true;
+ }
+ 
++bool RandomPlayerbotMgr::HandleProofResetCommand(ChatHandler* handler, std::string const& args)
++{
++    if (!sPlayerbotAIConfig.proofDungeonCommand)
++    {
++        handler->PSendSysMessage("Proof reset command is disabled. Set AiPlayerbot.ProofDungeonCommand = 1 in this proof tree.");
++        LOG_WARN("playerbots", "PLAYERBOTS_PROOF_RESET disabled args='{}'", args);
++        return false;
++    }
++
++    std::istringstream input(args);
++    std::string token;
++    input >> token;
++
++    uint32 const runId = ParseProofRunId(token);
++    if (token.empty() || token == "all")
++    {
++        PlayerbotsDatabase.Execute("DELETE FROM playerbots_random_bots WHERE event IN ('proof_dungeon', 'proof_run')");
++        eventCache.clear();
++        handler->PSendSysMessage("All proof dungeon reservations were cleared.");
++        LOG_INFO("playerbots", "PLAYERBOTS_PROOF_RESET all");
++        return true;
++    }
++
++    if (runId)
++    {
++        PlayerbotsDatabase.Execute(
++            "DELETE FROM playerbots_random_bots "
++            "WHERE event IN ('proof_dungeon', 'proof_run') "
++            "AND bot IN ("
++            "  SELECT bot FROM ("
++            "    SELECT bot FROM playerbots_random_bots WHERE event = 'proof_run' AND value = {}"
++            "  ) proof_run_bots"
++            ")",
++            runId);
++        eventCache.clear();
++        handler->PSendSysMessage("Proof dungeon reservations were cleared for run {}.", runId);
++        LOG_INFO("playerbots", "PLAYERBOTS_PROOF_RESET run={}", runId);
++        return true;
++    }
++
++    handler->PSendSysMessage("Usage: playerbots rndbot proofreset [all|run=<id>]");
++    LOG_WARN("playerbots", "PLAYERBOTS_PROOF_RESET invalid args='{}'", args);
++    return false;
++}
++
+ bool RandomPlayerbotMgr::HandleProofCrawlCommand(ChatHandler* handler, std::string const& args)
+ {
+     if (!sPlayerbotAIConfig.proofDungeonCommand)
+@@ -3212,6 +3257,12 @@ bool RandomPlayerbotMgr::HandlePlayerbotConsoleCommand(ChatHandler* handler, cha
+         return sRandomPlayerbotMgr.HandleProofCrawlCommand(handler, proofArgs);
+     }
+ 
++    if (cmd == "proofreset" || cmd.rfind("proofreset ", 0) == 0)
++    {
++        std::string const proofArgs = cmd.size() > strlen("proofreset") ? cmd.substr(strlen("proofreset") + 1) : "";
++        return sRandomPlayerbotMgr.HandleProofResetCommand(handler, proofArgs);
++    }
++
+     if (cmd == "reset")
+     {
+         PlayerbotsDatabase.Execute(PlayerbotsDatabase.GetPreparedStatement(PLAYERBOTS_DEL_RANDOM_BOTS));
+diff --git a/src/Bot/RandomPlayerbotMgr.h b/src/Bot/RandomPlayerbotMgr.h
+index c52d11d9..cc13f831 100644
+--- a/src/Bot/RandomPlayerbotMgr.h
++++ b/src/Bot/RandomPlayerbotMgr.h
+@@ -103,6 +103,7 @@ public:
+     static bool HandlePlayerbotConsoleCommand(ChatHandler* handler, char const* args);
+     bool HandleProofDungeonCommand(ChatHandler* handler, std::string const& args);
+     bool HandleProofCrawlCommand(ChatHandler* handler, std::string const& args);
++    bool HandleProofResetCommand(ChatHandler* handler, std::string const& args);
+     bool IsRandomBot(Player* bot);
+     bool IsRandomBot(ObjectGuid::LowType bot);
+     bool IsAddclassBot(Player* bot);
+-- 
+2.53.0
+
