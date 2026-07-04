@@ -124,7 +124,7 @@ playerbots rndbot proofcrawl deadmines run=501 1
 playerbots rndbot proofcrawl deadmines run=501 status
 ```
 
-`proofcrawl` uses early hard-coded proof waypoints for RFC and Deadmines. It does not try to solve the whole dungeon; it moves the currently staged proof bots toward nearby early pulls and logs `PLAYERBOTS_PROOF_CRAWL` evidence with live instance id, position, class, level, combat, death, and health state.
+`proofcrawl` uses hard-coded proof waypoints for RFC and Deadmines. It does not try to solve the whole dungeon yet; it moves the currently staged proof bots toward nearby early pulls and logs `PLAYERBOTS_PROOF_CRAWL` evidence with live instance id, position, class, level, combat, death, health state, and selected target outcome.
 
 When `run=<id>` is supplied, `proofcrawl` only moves or reports bots staged with that same run id. This allows multiple proof groups with different sizes and class compositions to be staged in the same disposable world and advanced independently.
 
@@ -137,7 +137,7 @@ playerbots rndbot proofreset run=501
 
 Use it before starting a fresh matrix. Proof reservations intentionally hold selected bots for 30 minutes so evidence capture is stable; without a reset, later class-specific runs can fail with `insufficient_candidates` because the desired class is still reserved by another proof run.
 
-Supported first-pass step range is `1-5`. Run `status` after each step settles.
+Supported first-pass step range is `1-5` for RFC and `1-10` for Deadmines. Run `status` after each step settles.
 
 The `pull` action searches for the nearest valid hostile target around any bot in the staged run, selects that same target for the run, switches each bot into combat AI, issues a normal attack start where possible, and logs the target and bot instance ids:
 
@@ -146,6 +146,14 @@ PLAYERBOTS_PROOF_CRAWL pull_target ...
 PLAYERBOTS_PROOF_CRAWL pull_issued ...
 PLAYERBOTS_PROOF_CRAWL pull ...
 ```
+
+After a pull, run `status` again. Status logs include target outcome fields:
+
+```text
+target_visible=yes|no target_entry=... target_name='...' target_alive=yes|no target_health_pct=... target_distance=...
+```
+
+For the current proof harness, `target_visible=no` after a pull is useful evidence, but it is not by itself a guaranteed kill confirmation. The next hardening step is to add explicit kill/credit tracking from combat events or creature death hooks.
 
 Use `pull` after moving a group near an early pack:
 
