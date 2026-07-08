@@ -124,6 +124,29 @@ variable "dns_zone_name" {
   default     = "warwid.com"
 }
 
+variable "dns_record_ttl_seconds" {
+  description = "TTL for standard Route 53 DNS records."
+  type        = number
+  default     = 300
+}
+
+variable "dns_zone_apex_a_records" {
+  description = "Temporary A records for the zone apex while the root website remains outside AWS."
+  type        = list(string)
+  default = [
+    "198.49.23.144",
+    "198.49.23.145",
+    "198.185.159.144",
+    "198.185.159.145",
+  ]
+}
+
+variable "dns_www_cname" {
+  description = "Temporary CNAME target for www while the root website remains outside AWS. Leave null to skip the record."
+  type        = string
+  default     = "ext-sq.squarespace.com"
+}
+
 variable "account_portal_certificate_arn" {
   description = "Issued ACM certificate ARN for the account portal ALB HTTPS listener. Leave null until DNS validation has issued the certificate."
   type        = string

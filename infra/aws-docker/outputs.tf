@@ -49,12 +49,12 @@ output "route53_nameservers" {
 }
 
 output "route53_future_account_portal_record" {
-  description = "Record to create in Route 53 for the WAF-protected account portal after DNS authority moves."
+  description = "Route 53 account portal record managed for the WAF-protected account portal."
   value       = "${var.account_portal_hostname} CNAME ${aws_lb.account_portal.dns_name}"
 }
 
 output "route53_future_realm_record" {
-  description = "Record to create in Route 53 for the game realm after DNS authority moves."
+  description = "Route 53 realm record managed for the game realm."
   value       = "${var.realm_address} A ${aws_eip.azerothcore.public_ip}"
 }
 
