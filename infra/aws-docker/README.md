@@ -66,12 +66,16 @@ If the instance timed out before the push finished, push the images and replace 
 terraform -chdir=infra\aws-docker apply -replace=aws_instance.azerothcore
 ```
 
-## Squarespace DNS
+## DNS
 
-Use the `squarespace_dns_record` output to create an A record in Squarespace. With the defaults, create:
+Terraform prepares a Route 53 hosted zone and manages the public DNS records for the Warwid game and account portal. Registrar delegation is still a manual cutover: after `terraform apply`, set the domain nameservers at the registrar to the `route53_nameservers` output.
+
+Before delegation, verify these outputs:
 
 ```text
-play.warwid.com  A  <terraform public_ip output>
+route53_nameservers
+route53_future_realm_record
+route53_future_account_portal_record
 ```
 
 Then set the WoW client realmlist to:
