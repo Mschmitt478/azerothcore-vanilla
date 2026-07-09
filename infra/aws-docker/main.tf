@@ -122,6 +122,16 @@ data "aws_iam_policy_document" "ecr_pull" {
   }
 }
 
+data "aws_iam_policy_document" "account_portal_ses_send" {
+  statement {
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail",
+    ]
+    resources = [aws_ses_domain_identity.account_portal.arn]
+  }
+}
+
 resource "aws_iam_role" "instance" {
   name               = "${var.name_prefix}-instance-role"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
@@ -131,6 +141,12 @@ resource "aws_iam_role_policy" "ecr_pull" {
   name   = "${var.name_prefix}-ecr-pull"
   role   = aws_iam_role.instance.id
   policy = data.aws_iam_policy_document.ecr_pull.json
+}
+
+resource "aws_iam_role_policy" "account_portal_ses_send" {
+  name   = "${var.name_prefix}-account-portal-ses-send"
+  role   = aws_iam_role.instance.id
+  policy = data.aws_iam_policy_document.account_portal_ses_send.json
 }
 
 resource "aws_iam_instance_profile" "instance" {
@@ -155,22 +171,6 @@ resource "aws_security_group" "azerothcore" {
     description = "WoW worldserver"
     from_port   = var.world_port
     to_port     = var.world_port
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTP for Caddy and certificate issuance"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTPS for web services"
-    from_port   = 443
-    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
