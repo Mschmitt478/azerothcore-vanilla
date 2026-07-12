@@ -6,7 +6,9 @@ with one through five Playerbots. It is deliberately separate from production:
 - Core base: `mod-playerbots/azerothcore-wotlk` Playerbot-compatible history.
 - `mod-playerbots`: pinned to `049f35906ed0b66ea5fcdd7fdc9f12ca2ab480ca`.
 - Automated harness: pinned to
-  `529ecc8d65927b3c2eca792c58dad11921032cce`.
+  `bb6bb144a2b52241b45d2af5ae1c20904a7c3d64`.
+- Integration: `mod-playerbots` is an unchanged sibling; all QA commands and
+  state belong to `mod-playerbots-automated-testing`.
 - Databases: `acore_auth_pb`, `acore_world_pb`, `acore_characters_pb`, and
   `acore_playerbots_pb` only.
 - Host bindings: MySQL `127.0.0.1:13306`, authserver `127.0.0.1:13724`, and
@@ -16,6 +18,14 @@ with one through five Playerbots. It is deliberately separate from production:
 
 Do not deploy this branch with the production Terraform state or against the
 production EBS volume.
+
+## Project Tracking
+
+- Plans and documentation: <https://magnanimous.atlassian.net/wiki>
+- Tasks and execution tracking: <https://magnanimous.atlassian.net/jira/>
+
+Do not commit Atlassian tokens. Store replacement credentials in a secret
+manager or an operator-local environment variable.
 
 ## First Checkout
 
@@ -58,7 +68,6 @@ does not interfere with Playerbots evidence.
 For a non-Docker Linux build:
 
 ```bash
-tools/warwid/playerbots-qa/qa.sh patch
 tools/warwid/playerbots-qa/qa.sh build
 tools/warwid/playerbots-qa/qa.sh profile
 tools/warwid/playerbots-qa/qa.sh start

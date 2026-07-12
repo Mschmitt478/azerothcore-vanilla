@@ -85,17 +85,8 @@ WORKDIR /azerothcore/build
 RUN git -C /azerothcore/modules/mod-autobalance apply --check /azerothcore/patches/warwid/mod-autobalance-console-null-session.patch \
     && git -C /azerothcore/modules/mod-autobalance apply /azerothcore/patches/warwid/mod-autobalance-console-null-session.patch
 
-RUN /azerothcore/tools/warwid/playerbots-qa/apply-playerbots-patches.sh /azerothcore/modules/mod-playerbots
-
 RUN --mount=type=cache,target=/ccache,sharing=locked \
-    # This may seem silly (and it is), but AzerothCore wants the git repo at
-    # build time. The git repo is _huge_ and it's not something that really
-    # makes sense to mount into the container, but this way we can let the build
-    # have the information it needs without including the hundreds of megabytes
-    # of git repo into the container.
-    --mount=type=bind,target=/azerothcore/.git,source=.git \
-    git config --global --add safe.directory /azerothcore \
-    && cmake /azerothcore \
+    cmake /azerothcore \
        -DCMAKE_INSTALL_PREFIX="/azerothcore/env/dist"  \
        -DAPPS_BUILD="all"                              \
        -DTOOLS_BUILD="$CTOOLS_BUILD"                   \

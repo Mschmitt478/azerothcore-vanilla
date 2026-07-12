@@ -147,4 +147,11 @@ set_config_value "$AHBOT_CONF" "AuctionHouseBot.DisableBOP_Or_Quest_NoReqLevel" 
 set_config_value "$AHBOT_CONF" "AuctionHouseBot.DisableItemsBelowLevel" "2"
 set_config_value "$AHBOT_CONF" "AuctionHouseBot.DisableItemsAboveLevel" "187"
 
+# The extension exists only on QA builds and owns its enable flag. Production
+# builds omit this module and therefore never enter this block.
+if [[ -f "$MODULE_CONF_DIR/playerbots-automated-testing.conf.dist" ]]; then
+    PLAYERBOTS_QA_CONF="$(ensure_module_config playerbots-automated-testing.conf)"
+    set_config_value "$PLAYERBOTS_QA_CONF" "PlayerbotsAutomatedTesting.Enable" "${AC_PLAYERBOTS_AUTOMATED_TESTING_ENABLE:-0}"
+fi
+
 echo "Applied Warwid solo/small-group configuration."

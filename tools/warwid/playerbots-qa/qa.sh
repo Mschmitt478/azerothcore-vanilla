@@ -16,7 +16,6 @@ Usage: tools/warwid/playerbots-qa/qa.sh <command> [arguments]
 
 Commands:
   preflight                 Verify QA branch, pinned modules, and isolation.
-  patch                     Apply the guarded Playerbots proof patch stack.
   build                     Configure and build the disposable proof install.
   profile                   Render _pb configs and apply Warwid 1-5 tuning.
   start|stop|status         Control the local disposable proof runtime.
@@ -76,8 +75,11 @@ preflight() {
     testing_sha="$(git -C "$ROOT_DIR/modules/mod-playerbots-automated-testing" rev-parse HEAD)"
     [[ "$playerbots_sha" == "049f35906ed0b66ea5fcdd7fdc9f12ca2ab480ca" ]] ||
         die "unexpected mod-playerbots revision: $playerbots_sha"
-    [[ "$testing_sha" == "529ecc8d65927b3c2eca792c58dad11921032cce" ]] ||
+    [[ "$testing_sha" == "bb6bb144a2b52241b45d2af5ae1c20904a7c3d64" ]] ||
         die "unexpected automated-testing revision: $testing_sha"
+
+    [[ -z "$(git -C "$ROOT_DIR/modules/mod-playerbots" status --short)" ]] ||
+        die "mod-playerbots has local changes; the QA extension must not patch it"
 
     [[ "$ROOT_DIR" != /srv/azerothcore* ]] || die "refusing to use the production /srv/azerothcore tree"
     printf 'QA branch and pinned module revisions are valid.\n'
@@ -86,8 +88,6 @@ preflight() {
 build_proof() {
     preflight
     require_command cmake
-    "$QA_DIR/apply-playerbots-patches.sh"
-
     mkdir -p "$BUILD_DIR" "$INSTALL_DIR"
     cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -112,6 +112,7 @@ render_profile() {
     grep -Eq 'WorldDatabaseInfo.*acore_world_pb' "$INSTALL_DIR/etc/worldserver.conf" || die "world DB is not isolated"
     grep -Eq 'CharacterDatabaseInfo.*acore_characters_pb' "$INSTALL_DIR/etc/worldserver.conf" || die "character DB is not isolated"
     grep -Eq 'PlayerbotsDatabaseInfo.*acore_playerbots_pb' "$INSTALL_DIR/etc/modules/playerbots.conf" || die "playerbots DB is not isolated"
+    grep -Eq 'PlayerbotsAutomatedTesting\.Enable[[:space:]]*=[[:space:]]*1' "$INSTALL_DIR/etc/modules/playerbots-automated-testing.conf" || die "QA extension is not enabled"
     grep -Eq 'WorldServerPort[[:space:]]*=[[:space:]]*18085' "$INSTALL_DIR/etc/worldserver.conf" || die "world port is not isolated"
     grep -Eq 'AutoBalance.MinPlayers[[:space:]]*=[[:space:]]*1' "$INSTALL_DIR/etc/modules/AutoBalance.conf" || die "AutoBalance 1-player floor is missing"
     grep -Eq 'IndividualProgression.BotAccountsRegex[[:space:]]*=[[:space:]]*"\^RNDBOT\.\*"' "$INSTALL_DIR/etc/modules/individualProgression.conf" || die "RNDBOT progression exclusion is missing"
@@ -159,10 +160,6 @@ command_name="${1:-}"
 case "$command_name" in
     preflight)
         preflight
-        ;;
-    patch)
-        preflight
-        "$QA_DIR/apply-playerbots-patches.sh"
         ;;
     build)
         build_proof
