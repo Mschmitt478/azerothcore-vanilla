@@ -1,0 +1,193 @@
+diff --git a/src/Bot/RandomPlayerbotMgr.cpp b/src/Bot/RandomPlayerbotMgr.cpp
+index f621fd95..c052b7a0 100644
+--- a/src/Bot/RandomPlayerbotMgr.cpp
++++ b/src/Bot/RandomPlayerbotMgr.cpp
+@@ -37,6 +37,7 @@
+ #include "MapMgr.h"
+ #include "NewRpgInfo.h"
+ #include "NewRpgStrategy.h"
++#include "ObjectAccessor.h"
+ #include "ObjectGuid.h"
+ #include "PerfMonitor.h"
+ #include "Player.h"
+@@ -330,6 +330,35 @@ Unit* FindProofPullTarget(std::vector<Player*> const& proofBots, float range, Pl
+ 
+     return bestTarget;
+ }
++
++uint32 CountProofNearbyHostiles(std::vector<Player*> const& proofBots, float range)
++{
++    std::vector<ObjectGuid> seenTargets;
++    for (Player* bot : proofBots)
++    {
++        if (!bot || !bot->IsInWorld() || !bot->IsAlive())
++            continue;
++
++        std::list<Unit*> targets;
++        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(bot, bot, range);
++        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck> searcher(bot, targets, check);
++        Cell::VisitObjects(bot, searcher, range);
++
++        for (Unit* target : targets)
++        {
++            if (!target || !target->IsInWorld() || !target->IsAlive() || target->IsPlayer())
++                continue;
++            if (target->GetMapId() != bot->GetMapId() || target->GetInstanceId() != bot->GetInstanceId() ||
++                !bot->IsValidAttackTarget(target) || !bot->IsWithinLOSInMap(target))
++                continue;
++
++            ObjectGuid const guid = target->GetGUID();
++            if (std::find(seenTargets.begin(), seenTargets.end(), guid) == seenTargets.end())
++                seenTargets.push_back(guid);
++        }
++    }
++    return seenTargets.size();
++}
+ }
+ 
+ void PrintStatsThread() { sRandomPlayerbotMgr.PrintStats(); }
+@@ -3026,6 +3055,7 @@ bool RandomPlayerbotMgr::HandleProofResetCommand(ChatHandler* handler, std::stri
+     {
+         PlayerbotsDatabase.Execute("DELETE FROM playerbots_random_bots WHERE event IN ('proof_dungeon', 'proof_run')");
+         eventCache.clear();
++        proofCrawlRunStates.clear();
+         handler->PSendSysMessage("All proof dungeon reservations were cleared.");
+         LOG_INFO("playerbots", "PLAYERBOTS_PROOF_RESET all");
+         return true;
+@@ -3044,6 +3074,7 @@ bool RandomPlayerbotMgr::HandleProofResetCommand(ChatHandler* handler, std::stri
+             ")",
+             runId);
+         eventCache.clear();
++        proofCrawlRunStates.erase(runId);
+         handler->PSendSysMessage("Proof dungeon reservations were cleared for run {}.", runId);
+         LOG_INFO("playerbots", "PLAYERBOTS_PROOF_RESET run={}", runId);
+         return true;
+@@ -3127,11 +3158,34 @@ bool RandomPlayerbotMgr::HandleProofCrawlCommand(ChatHandler* handler, std::stri
+ 
+     if (stepToken == "status")
+     {
++        uint32 proofTargetGuid = 0;
++        uint32 botsInCombat = 0;
++        uint32 deadBots = 0;
++        uint32 minHealthPct = 100;
++        bool hasHealth = false;
++        Unit* observedTarget = nullptr;
++
+         for (Player* bot : proofBots)
+         {
+             Unit* selectedTarget = bot->GetSelectedUnit();
+             if (selectedTarget && selectedTarget->IsPlayer())
+                 selectedTarget = nullptr;
++
++            uint32 const eventTargetGuid = GetEventValue(bot->GetGUID().GetCounter(), "proof_target");
++            if (eventTargetGuid)
++                proofTargetGuid = eventTargetGuid;
++            if (!observedTarget && selectedTarget && (!proofTargetGuid || selectedTarget->GetGUID().GetCounter() == proofTargetGuid))
++                observedTarget = selectedTarget;
++            if (bot->IsInCombat())
++                ++botsInCombat;
++            if (bot->isDead())
++                ++deadBots;
++            if (!bot->isDead())
++            {
++                minHealthPct = std::min<uint32>(minHealthPct, uint32(bot->GetHealthPct()));
++                hasHealth = true;
++            }
++
+             ObjectGuid const targetGuid = selectedTarget ? selectedTarget->GetGUID() : ObjectGuid::Empty;
+             LOG_INFO("playerbots",
+                      "PLAYERBOTS_PROOF_CRAWL status run={} dungeon={} dungeon_name='{}' map={} instance={} bot_guid={} bot_name={} class={} level={} x={} y={} z={} combat={} dead={} health_pct={} target_guid={} target_visible={} target_entry={} target_name='{}' target_alive={} target_health_pct={} target_instance={} target_distance={}",
+@@ -3144,7 +3196,41 @@ bool RandomPlayerbotMgr::HandleProofCrawlCommand(ChatHandler* handler, std::stri
+                      selectedTarget ? ProofBool(selectedTarget->IsAlive()) : "no",
+                      selectedTarget ? uint32(selectedTarget->GetHealthPct()) : 0,
+                      selectedTarget ? selectedTarget->GetInstanceId() : 0,
+-                     selectedTarget ? bot->GetDistance(selectedTarget) : 0.0f);
++                      selectedTarget ? bot->GetDistance(selectedTarget) : 0.0f);
++        }
++
++        bool const targetVisible = observedTarget != nullptr;
++        bool const targetAlive = observedTarget && observedTarget->IsAlive();
++        char const* clearOutcome = "unknown";
++        char const* clearEvidence = "target_not_observed_pack_size_unknown";
++        if (targetVisible && !targetAlive)
++        {
++            clearOutcome = "cleared";
++            clearEvidence = "explicit_target_dead_pack_size_unknown";
++        }
++        else if (targetVisible && targetAlive)
++        {
++            clearOutcome = "not_cleared";
++            clearEvidence = "explicit_target_alive_pack_size_unknown";
++        }
++        else if (proofTargetGuid)
++        {
++            clearOutcome = "not_visible";
++            clearEvidence = "target_not_visible_pack_size_unknown";
++        }
++
++        if (proofTargetGuid)
++        {
++            LOG_INFO("playerbots",
++                     "PLAYERBOTS_PROOF_CRAWL pull_observe run={} dungeon={} dungeon_name='{}' map={} instance={} bots={} target_guid={} target_visible={} target_entry={} target_name='{}' target_alive={} target_health_pct={} bots_in_combat={} dead_bots={} min_health_pct={} clear_outcome={} clear_evidence={} pack_size= engaged_target_count=",
++                     runId, dungeon->id, dungeon->name, dungeon->map, proofBots.front()->GetInstanceId(), proofBots.size(),
++                     observedTarget ? observedTarget->GetGUID().GetCounter() : proofTargetGuid, ProofBool(targetVisible),
++                     observedTarget ? observedTarget->GetEntry() : 0,
++                     observedTarget ? observedTarget->GetName() : "none",
++                     targetVisible ? ProofBool(targetAlive) : "unknown",
++                     observedTarget ? std::to_string(uint32(observedTarget->GetHealthPct())) : "",
++                     botsInCombat, deadBots, hasHealth ? std::to_string(minHealthPct) : "",
++                     clearOutcome, clearEvidence);
+         }
+         handler->PSendSysMessage("Proof crawl status logged for {} bot(s) in {} run {}.", proofBots.size(), dungeon->name, runId);
+         return true;
+@@ -3170,6 +3256,7 @@ bool RandomPlayerbotMgr::HandleProofCrawlCommand(ChatHandler* handler, std::stri
+         float const targetY = target->GetPositionY();
+         float const targetZ = target->GetPositionZ();
+         uint32 const targetHealthPct = uint32(target->GetHealthPct());
++        uint32 const nearbyHostileCount = CountProofNearbyHostiles(proofBots, sPlayerbotAIConfig.reactDistance * 3.0f);
+ 
+         LOG_INFO("playerbots",
+                  "PLAYERBOTS_PROOF_CRAWL pull_target run={} dungeon={} dungeon_name='{}' map={} instance={} target_guid={} target_entry={} target_name='{}' target_level={} target_health_pct={} target_x={} target_y={} target_z={} finder_guid={} finder_name={}",
+@@ -3177,6 +3264,11 @@ bool RandomPlayerbotMgr::HandleProofCrawlCommand(ChatHandler* handler, std::stri
+                  target->GetLevel(), targetHealthPct, targetX, targetY, targetZ,
+                  finder ? finder->GetGUID().GetCounter() : 0, finder ? finder->GetName() : "none");
+ 
++        LOG_INFO("playerbots",
++                 "PLAYERBOTS_PROOF_CRAWL pull_start run={} dungeon={} dungeon_name='{}' map={} instance={} target_guid={} target_entry={} target_name='{}' target_health_pct={} group_bot_count={} nearby_hostile_count={} engaged_target_count={} pack_size=",
++                 runId, dungeon->id, dungeon->name, dungeon->map, target->GetInstanceId(), targetGuid.GetCounter(), targetEntry, targetName,
++                 targetHealthPct, proofBots.size(), nearbyHostileCount, nearbyHostileCount);
++
+         for (Player* bot : proofBots)
+         {
+             holdProofDungeonBot(bot->GetGUID().GetCounter());
+diff --git a/src/Bot/RandomPlayerbotMgr.h b/src/Bot/RandomPlayerbotMgr.h
+index cc13f831..a47842f3 100644
+--- a/src/Bot/RandomPlayerbotMgr.h
++++ b/src/Bot/RandomPlayerbotMgr.h
+@@ -245,6 +245,26 @@ private:
+     std::vector<Player*> players;
+     uint32 processTicks;
+ 
++    struct ProofCrawlRunState
++    {
++        uint32 dungeonId = 0;
++        uint32 mapId = 0;
++        uint32 instanceId = 0;
++        ObjectGuid targetGuid;
++        uint32 targetEntry = 0;
++        std::string targetName;
++        uint32 targetHealthStartPct = 0;
++        uint32 groupBotCount = 0;
++        uint32 startedAt = 0;
++        uint32 lastObservedAt = 0;
++        bool pullStarted = false;
++        bool targetObservedDead = false;
++        bool noTarget = false;
++        std::vector<ObjectGuid> engagedTargetGuids;
++    };
++
++    std::map<uint32, ProofCrawlRunState> proofCrawlRunStates;
++
+     // std::map<uint32, std::vector<WorldLocation>> rpgLocsCache;
+     std::map<uint32, std::map<uint32, std::vector<WorldLocation>>> rpgLocsCacheLevel;
+     std::map<TeamId, std::map<BattlegroundTypeId, std::vector<uint32>>> BattleMastersCache;

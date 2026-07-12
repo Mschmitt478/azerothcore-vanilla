@@ -74,6 +74,7 @@ set_config_value "$IPP_CONF" "IndividualProgression.VanillaHealingAdjustment" "0
 set_config_value "$IPP_CONF" "IndividualProgression.TBCPowerAdjustment" "0.6"
 set_config_value "$IPP_CONF" "IndividualProgression.TBCHealingAdjustment" "0.6"
 set_config_value "$IPP_CONF" "IndividualProgression.BotOnlyAdjustments" "0"
+set_config_value "$IPP_CONF" "IndividualProgression.BotAccountsRegex" '"^RNDBOT.*"'
 set_config_value "$IPP_CONF" "IndividualProgression.QuestXPFix" "1"
 set_config_value "$IPP_CONF" "IndividualProgression.SimpleConfigOverride" "1"
 set_config_value "$IPP_CONF" "IndividualProgression.DisableRDF" "0"

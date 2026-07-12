@@ -17,3 +17,7 @@
 [submodule "modules/mod-solo-lfg"]
 	path = modules/mod-solo-lfg
 	url = https://github.com/azerothcore/mod-solo-lfg.git
+[submodule "modules/mod-playerbots-automated-testing"]
+	path = modules/mod-playerbots-automated-testing
+	url = https://github.com/Mschmitt478/mod-playerbots-automated-testing.git
+	branch = main

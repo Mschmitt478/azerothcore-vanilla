@@ -64,7 +64,7 @@ ARG CCACHE_LOGFILE=""
 
 RUN apt-get update                                                     \
     && apt-get install -y --no-install-recommends                         \
-        build-essential ccache libtool cmake-data make cmake clang    \
+        build-essential ccache libtool cmake-data make cmake clang patch \
         git lsb-base curl unzip default-mysql-client openssl                  \
         default-libmysqlclient-dev libboost-all-dev libssl-dev libmysql++-dev \
         libreadline-dev zlib1g-dev libbz2-dev libncurses5-dev liblzma-dev  \
@@ -76,6 +76,7 @@ COPY deps /azerothcore/deps
 COPY src /azerothcore/src
 COPY modules /azerothcore/modules
 COPY patches /azerothcore/patches
+COPY tools/warwid/playerbots-qa /azerothcore/tools/warwid/playerbots-qa
 
 ARG CACHEBUST=1
 
@@ -83,6 +84,8 @@ WORKDIR /azerothcore/build
 
 RUN git -C /azerothcore/modules/mod-autobalance apply --check /azerothcore/patches/warwid/mod-autobalance-console-null-session.patch \
     && git -C /azerothcore/modules/mod-autobalance apply /azerothcore/patches/warwid/mod-autobalance-console-null-session.patch
+
+RUN /azerothcore/tools/warwid/playerbots-qa/apply-playerbots-patches.sh /azerothcore/modules/mod-playerbots
 
 RUN --mount=type=cache,target=/ccache,sharing=locked \
     # This may seem silly (and it is), but AzerothCore wants the git repo at
